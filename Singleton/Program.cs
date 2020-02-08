@@ -19,20 +19,24 @@ namespace Singleton
         {
             Singleton singleton = Singleton.Instance();
             Singleton singleton1 = Singleton.Instance();
-            Singleton singleton2;
+            Singleton singleton2 = null;
             
             Thread t2 = new Thread(delegate ()
             {
                 singleton2 = Singleton.Instance();               
             });
             t2.Start();
-             
+          
+
         }
     }
 
     public sealed class Singleton
     {
         private static Singleton _singleton;
+        // lock is used to make sure that part when instance is returned
+        // can be accesed only by one and only one thread at time
+        private static readonly object _lock = new object(); 
 
         private Singleton()
         {
@@ -40,10 +44,20 @@ namespace Singleton
         }
         public static Singleton Instance()
         {
-            if (_singleton == null)
-                _singleton = new Singleton();
 
-            return _singleton;
+            // locking is memory expensive operation - check if there is an actual need for it
+            // there isn't if it hasn't been created yet
+            if(_singleton != null)
+            {
+                lock (_lock)
+                {
+                    if (_singleton == null)
+                        _singleton = new Singleton();
+                
+                }
+            } 
+                return _singleton;
+
         }
     }
 
